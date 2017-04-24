@@ -1,0 +1,7 @@
+url: http://myhost/my/nice/endpoint # External application's URL to be called on issue update
+relevant_status: [2,5] # Request happens only if status id is on this Array
+relevant_projects: [8] # Request happens only if project id is on this Arrayy
+fields_needed: # Fields you want to send on JSON(supports native and custom fields). A '.' can be used for specifying nested properties.
+    - status_id
+    - author.login
+    - my_new_custom_field
