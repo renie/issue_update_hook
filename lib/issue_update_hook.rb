@@ -45,12 +45,18 @@ class RedminePostActionHooks < Redmine::Hook::Listener
 		begin
 			uri = URI.parse(@@url)
 			http = Net::HTTP.new(uri.host, uri.port)
-		
+
+            if uri.scheme == "https"
+                http.use_ssl = true
+                http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+            end
+
 			request = Net::HTTP::Post.new(uri.request_uri, header)
 			request.body = data
 		
 			res = http.request(request)
-			RAILS_DEFAULT_LOGGER.warn "Issue update hook: Failed to dispath information, server returned status #{res.code}: #{res.msg}" unless res === Net::HTTPSuccess
+            RAILS_DEFAULT_LOGGER.info "URL called: #{@@url}. Data: #{data}"
+			RAILS_DEFAULT_LOGGER.warn "Issue update hook: Failed to dispath information, server returned status #{res.code}: #{res.msg}" unless res.kind_of? === Net::HTTPSuccess
 		rescue Exception => e
 			RAILS_DEFAULT_LOGGER.warn "Issue update hook: Caught an Exception: #{e.class} with message \"#{e.message}\""
 		end
