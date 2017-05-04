@@ -7,6 +7,8 @@ class RedminePostActionHooks < Redmine::Hook::Listener
 	@@relevant_status = nil
 	@@issue = nil
 	@@relevant_projects = nil
+	@@fields_needed = nil
+	@@notes_filter = nil
 
 	
 	def controller_issues_edit_after_save(context = { })
@@ -37,6 +39,7 @@ class RedminePostActionHooks < Redmine::Hook::Listener
 		@@relevant_status = options['relevant_status']
 		@@relevant_projects = options['relevant_projects']
 		@@fields_needed = options['fields_needed']
+		@@notes_filter = !options['notes_filter'].empty? ? Regexp.new(options['notes_filter']) : ''
 	end
 
 	def send_request(data)
@@ -79,6 +82,8 @@ class RedminePostActionHooks < Redmine::Hook::Listener
 	end
 
 	def get_field(field_name)
+		return get_notes unless field_name != 'notes'
+
 		expression = '@@issue'
 		field_name.split('.').each {|s| expression += ".send(:#{s})" }
 
@@ -89,5 +94,15 @@ class RedminePostActionHooks < Redmine::Hook::Listener
 		field = @@issue.custom_field_values.detect {|v| v.custom_field.name == field_name }
 
 		return field ? field.value : nil
+	end
+
+	def get_notes()
+		notes = Hash.new
+		@@issue.send(:journals).each do |j|
+			note = j[:notes] unless j[:notes].empty?
+			notes[j[:id]] = note unless note !~ @@notes_filter
+		end
+
+		return notes
 	end
 end
